@@ -1,0 +1,129 @@
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+
+NavControl:
+	SelectScreen:
+		id: SelectScreen
+	MainScreen:
+		id: MainScreen
+
+<SelectScreen>:
+	name: "SelectScreen"
+
+	FloatLayout:
+		id: float1 
+		FloatLayout:
+			size_hint: .3, .4
+			pos_hint: {'center_x':.5, 'center_y': .7}
+			canvas:
+				Rectangle:
+					id: dropsquare
+					size: self.size
+					pos: self.pos 
+					source: "Images/icon.png"
+		DropSquare:
+			ref: root
+
+<MainScreen>:
+	name: "MainScreen"
+	MDBoxLayout:
+	    orientation: "vertical"
+
+	    MDToolbar:
+	    	id: toolbar
+	        title: root.ids.Sheet.filename
+	        md_bg_color: get_color_from_hex("#223F4D")
+	        right_action_items:
+				[
+				["play", lambda x: root.ids.Sheet.Auto_Add(root.mode), "Start"],
+				["replay", lambda x: root.ids.Sheet.resetSheet(), "Reload"],
+				[root.icon, lambda x:root.changeMode(), "Mode"],
+				["content-save", lambda x:root.ids.Sheet.saveFile(), "Save"]
+				]
+
+	    MDBoxLayout:
+
+	        MDNavigationRail:
+	            size: 20, 40
+	            md_bg_color: get_color_from_hex("#344954")
+	            color_normal: get_color_from_hex("#718089")
+            	color_active: get_color_from_hex("#f3ab44")
+			    use_hover_behavior: True
+			    hover_bg: 0, 0, 0, .2
+	            line_color: get_color_from_hex("#000000")
+	            use_action_button: True
+			    on_action_button: root.manager.current = "SelectScreen"
+
+	            MDNavigationRailItem:
+	            	id: setting
+	                icon: "cog"
+	                padding: 0,40,0,25
+	                on_release: root.showOptions(self)
+
+	            MDNavigationRailItem:
+	                icon: "sticker-remove"
+	                padding: 0,40,0,25
+	                disabled: True
+
+	            MDNavigationRailItem:
+	                icon: "sticker-check"
+	                padding: 0,40,0,25 
+	                disabled: True
+
+	            MDNavigationRailItem:
+	                icon: "clock-time-four"
+	                padding: 0,40,0,25
+
+	        MDBoxLayout:
+	        	padding: "2dp"
+			    canvas.before:
+			        Color:
+			            rgba: .5, .5, .5, 1
+			        Line:
+			            width: 1
+			            rectangle: self.x, self.y, self.width, self.height
+			    ScrollView:	
+			    	id: scroll
+			    	size_hint: 1,1
+			        do_scroll_x: True
+    				do_scroll_y: True
+    				Sheet:
+    					id: Sheet
+    					
+<CustomSheetItems>
+    canvas.before:
+        Color:
+            rgba: root.bgColor
+        Rectangle:
+        	size: self.size 
+        	pos: self.pos
+        Color:
+            rgba: .5, .5, .5, 1
+        Line:
+            width: 2
+            rectangle: self.x, self.y, self.width, self.height
+
+<Sheet>
+	cols: 27
+	size_hint_x: None
+	size_hint_y: None
+	width: self.defaultWidth * 26 + self.defaultNumWidth
+	height: self.defaultHeight * self.RowReq
+
+<DropSquare>
+	size_hint: .7, .4
+	pos_hint: {'center_x':.5, 'center_y': .25}
+	canvas:
+		Rectangle:
+			size: self.size
+			pos: self.pos 
+			source: "Images/dragdrop.jpg"
+
+	MDFillRoundFlatIconButton:
+		size_hint: .35, .14
+		pos_hint: {'center_x': .5, "center_y": .45}
+	    icon: "upload"
+	    font_size: 20
+	    valign: 'middle'
+	    halign: 'right'
+	    text: "Choose from device"
+	    on_press: root.FileManagerOpen()
