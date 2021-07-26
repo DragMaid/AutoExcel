@@ -5,6 +5,44 @@ NavControl:
 		id: SelectScreen
 	MainScreen:
 		id: MainScreen
+	LoadingScreen:
+		id: LoadingScreen
+	ErrorScreen:
+		id: ErrorScreen
+
+<LoadingScreen>:
+	name: "LoadingScreen"
+	AnchorLayout:
+		anchor_x: 'center'
+		anchor_y: 'center'
+		Image:
+			allow_stretch: True
+			size: 1000, 1000
+			source: "Images/loading.gif"
+			anim_delay: .1
+
+<ErrorScreen>
+	name: "ErrorScreen"
+	FloatLayout:
+		Image:
+			id: icon
+			size_hint: .2, .2
+			pos_hint: {'center_x': .5, 'center_y': .7}
+			source: "Images/error.png"
+		Label:
+			# pos_y: icon.pos[1] - 20
+			color: 'ff3333'
+			font_size:'25sp'
+			valign: 'middle'
+			halign: 'center'
+			pos_hint: {'center_x':.5, 'center_y':.5}
+			text: "Error detected:\nIncorrect/Too complex file format!"
+		MDRaisedButton:
+			text: "OK"
+			font_size:'20sp'
+			size_hint: .1, .1
+			pos_hint: {'center_x': .5, 'center_y': .3}
+			on_press: root.manager.current = 'SelectScreen'
 
 <SelectScreen>:
 	name: "SelectScreen"
@@ -106,7 +144,7 @@ NavControl:
 	cols: 27
 	size_hint_x: None
 	size_hint_y: None
-	width: self.defaultWidth * 26 + self.defaultNumWidth
+	width: self.defaultWidth * 27
 	height: self.defaultHeight * self.RowReq
 
 <DropSquare>

@@ -3,13 +3,13 @@ from kivy.config import Config
 Config.set('graphics', 'resizable', False)
 from kivymd.app import MDApp
 from kivy.core.window import Window
-Window.size = (1080, 720)
+Window.size = (950, 700)
 from kivymd.uix.label import MDLabel
 from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.lang import Builder
 from tkinter import filedialog
 from tkinter import Tk
-from kivy.properties import ObjectProperty, StringProperty, ListProperty
+from kivy.properties import ObjectProperty, StringProperty, ListProperty, NumericProperty, BooleanProperty
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 from openpyxl import load_workbook
@@ -18,6 +18,7 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.graphics import Color
 from kivymd.uix.toolbar import MDToolbar
+from threading import Thread
 
 ALPHABET = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
 
@@ -25,6 +26,12 @@ class NavControl(ScreenManager):
     pass
 
 class SelectScreen(Screen):
+    pass
+
+class LoadingScreen(Screen):
+    pass
+
+class ErrorScreen(Screen):
     pass
 
 #Cell square Widget
@@ -41,20 +48,24 @@ class Sheet(GridLayout):
     white = [1,1,1,1]
 
     #Board configuration values
-    RowReq = 20
+    RowReq = 100
     defaultWidth = 150
     defaultNumWidth = 50
     defaultHeight = 50
     
     #Board widgets reference
-    dataBoard = list()
-    dummy = list()
+    dataBoard = ListProperty()
+    dummy = ListProperty()
 
     #General Excel file info
     filepath = StringProperty()
     filename = StringProperty()
     workbook = ""
     worksheet = ""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.setupGrid()
 
     #Create board cells before changing value
     def setupGrid(self):
@@ -91,27 +102,27 @@ class Sheet(GridLayout):
     def InitData(self, filepath, filename):
         self.filepath = filepath
         self.filename = filename
-        self.reload_workbook()  
-        maxRow, maxCol = self.getMaxLen()
-        self.RowReq = maxCol + 30   
-        self.setupGrid()
+        self.reload_workbook()
         self.readData()
+
 
     #Assign cell's text to file data
     def readData(self):
         self.reload_workbook()
         maxRow, maxCol = self.getMaxLen()
         for x in range(1, maxCol+1):
-            for y in range(1,len(self.worksheet[x])+1):
+            for y in range(1, len(self.worksheet[x])+1):
                 var = str((self.worksheet.cell(row=x, column=y).value))
                 if var == "None":
                     self.dataBoard[0][x*27+y].text = ""
+                elif len(var) > 9:
+                    self.databoard[0][x*27+y].text = var[0:9] + "..."
                 else:
                     self.dataBoard[0][x*27+y].text = var
 
     #Get changes and apply
     def reload_workbook(self):
-        self.workbook = load_workbook(self.filename)
+        self.workbook = load_workbook(self.filepath)
         self.worksheet = self.workbook.active
 
     def Auto_Add(self, mode):
@@ -208,44 +219,37 @@ class DropSquare(FloatLayout):
                                               )
                                                     )
         root.destroy()
+        self.switchScreen('LoadingScreen')
+        thread = Thread(target=self.ProccessFile, args=(str(filepath),), daemon=True)
+        thread.start()
+
+    def ProccessFile(self, filepath):
         try:
-            print(filepath)
-            load_workbook(str(filepath)) #Check if workbook is corrupted or not
+            load_workbook(filepath)
             self.filepath = filepath
             self.getFilename()
             self.ref.manager.ids.MainScreen.ids.Sheet.InitData(filepath=self.filepath, filename=self.filename)
-            self.switchScreen()
+            self.switchScreen("MainScreen")
         except:
-            pass 
+            self.switchScreen("ErrorScreen")
 
     def on_dropfile(self, widget, filename):
         if self.collide_point(*Window.mouse_pos):
             # on_dropfile's filename is bytes (py3)
-            sortedPath = self.sortFilepath(str(filename)[2:-1])
-            try:
-                load_workbook(sortedPath)
-                self.filepath = sortedPath
-                self.getFilename()
-                self.ref.manager.ids.MainScreen.ids.Sheet.InitData(filepath=self.filepath, filename=self.filename)
-                self.switchScreen()
-            except:
-               pass
-               
-    def sortFilepath(self, path):
-        splitedPath = path.split("\\\\")
-        sortedPath = ""
-        for x in splitedPath:
-            sortedPath += (x)
-            sortedPath += ('/')
-        sortedPath = sortedPath[0:-1]
-        return sortedPath
+            decodedPath = filename.decode()
+            self.switchScreen("LoadingScreen")
+            thread = Thread(target=self.ProccessFile, args=(decodedPath,), daemon=True)
+            thread.start()
 
     def getFilename(self):
-        self.filename = self.filepath.split("/")[-1]  # "\\" is for Window only
+        if self.filepath.split('\\')[-1] == self.filepath:  # "\\" is for Window only = '\'
+            self.filename = self.filepath.split('/')[-1]
+        else:
+            self.filename = self.filepath.split('\\')[-1]
 
-    def switchScreen(self):
+    def switchScreen(self, Wscreen, *args):
         app = MDApp.get_running_app()
-        app.root.current = "MainScreen"
+        app.root.current = str(Wscreen)
 
 class MainApp(MDApp):
     def build(self):
