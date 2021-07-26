@@ -143,10 +143,10 @@ class Sheet(GridLayout):
                 self.worksheet.cell(row=maxCol+1, column=y, value=total)
                 self.dataBoard[0][(maxCol+1)*27+y].text = str(total)
         else:
-            for x in range(2, maxRow+2):
+            for x in range(2, maxCol+1):
                 maxTry = 3
                 total = 0
-                for y in range(1, maxCol+1):
+                for y in range(1, maxRow+1):
                     local = self.worksheet.cell(row=x, column=y).value
                     if type(local) == int or type(local) == float:
                         total += local
@@ -154,11 +154,11 @@ class Sheet(GridLayout):
                         maxTry -= 1
                     if maxTry == 0:
                         break
-                self.worksheet.cell(row=x, column=maxCol+1, value=total)
-                self.dataBoard[0][x*27+maxCol].text = str(total)
+                self.worksheet.cell(row=x, column=maxRow+1, value=total)
+                self.dataBoard[0][x*27+maxRow+1].text = str(total)
 
     def saveFile(self):
-        self.workbook.save(self.filename)
+        self.workbook.save(self.filepath)
 
 class MainScreen(Screen):
     icon = StringProperty("align-vertical-top")
